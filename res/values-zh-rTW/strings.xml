@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">微補丁</string>
+    <string name="btn_patch">安裝</string>
+    <string name="btn_patched">已安裝</string>
+    <string name="btn_restore">回復</string>
+    <string name="btn_restart">快重啟</string>
+    <string name="btn_reboot">重開機</string>
+    <string name="cb_skip_dexde_checking">跳過dex相依檢查</string>
+    <string name="subtitle_env_list">環境狀態</string>
+    <string name="subtitle_patch_list">外掛列表</string>
+    <string name="empty">沒有項目</string>
+
+    <string name="mi_usage">說明</string>
+    <string name="mi_show_bcp">顯示 boot class path</string>
+    <string name="mi_refresh_list">重整列表</string>
+
+    <string name="confirm_patch">確定套用環境?</string>
+    <string name="confirm_restore">確定還原檔案?</string>
+    <string name="confirm_restart">重啟 system server?</string>
+    <string name="confirm_reboot">完整重開機?</string>
+
+    <string name="notify_patch_updated">外掛已更新</string>
+    <string name="notify_patch_added">新安裝的外掛還未啟動</string>
+</resources>

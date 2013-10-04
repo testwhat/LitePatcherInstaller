@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent">
+
+	<LinearLayout android:id="@+id/base_panel"
+	    android:orientation="vertical"
+	    android:background="#ff334455"
+		android:layout_width="match_parent"
+		android:layout_height="190dp">
+		<TextView android:text="@string/subtitle_env_list"
+		    android:paddingTop="1dp"
+		    android:paddingLeft="5dp"
+		    android:textColor="#ff000022"
+		    android:textSize="16dp"
+		    android:background="#ffaaaaaa"
+		    android:layout_width="match_parent"
+			android:layout_height="24dp" />
+		<TextView android:id="@+id/status"
+		    android:minHeight="60dp"
+		    android:background="#ff222222"
+		    android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:singleLine="false" />
+
+		<CheckBox android:id="@+id/cb_no_dex_dep"
+		    android:enabled="false"
+		    android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+		    android:text="@string/cb_skip_dexde_checking" />
+		<LinearLayout android:orientation="horizontal"
+		    android:layout_width="match_parent"
+			android:layout_height="wrap_content">
+	    
+			<Button android:id="@+id/btn_patch"
+			    android:layout_weight="1"
+			    android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:text="@string/btn_patch" />
+		
+			<Button android:id="@+id/btn_restore"
+			    android:layout_weight="1"
+			    android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:text="@string/btn_restore" />
+		</LinearLayout>
+		<TextView android:text="@string/subtitle_patch_list"
+		    android:paddingTop="1dp"
+		    android:paddingLeft="5dp"
+		    android:textColor="#ff000022"
+		    android:textSize="16dp"
+		    android:background="#ffaaaaaa"
+		    android:layout_width="match_parent"
+			android:layout_height="24dp" />
+    </LinearLayout>
+
+	<ListView android:id="@+id/patch_list"
+	    android:layout_weight="1"
+	    android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:background="#ff333333"/>
+
+	<LinearLayout
+	    android:background="#ff334455"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="horizontal">
+    
+		<Button android:id="@+id/btn_restart_system"
+		    android:layout_weight="1"
+		    android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:text="@string/btn_restart" />
+	
+		<Button android:id="@+id/btn_reboot"
+		    android:layout_weight="1"
+		    android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:text="@string/btn_reboot" />
+	</LinearLayout>
+</LinearLayout>

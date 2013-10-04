@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lite Patcher</string>
+    <string name="btn_patch">Patch</string>
+    <string name="btn_patched">Patched</string>
+    <string name="btn_restore">Restore</string>
+    <string name="btn_restart">Restart</string>
+    <string name="btn_reboot">Reboot</string>
+    <string name="cb_skip_dexde_checking">Skip dex dependency checking</string>
+    <string name="subtitle_env_list">Environment status</string>
+    <string name="subtitle_patch_list">Patch list</string>
+    <string name="empty">Empty</string>
+
+    <string name="mi_usage">How to use</string>
+    <string name="mi_show_bcp">Show boot class path</string>
+    <string name="mi_refresh_list">Force refresh list</string>
+
+    <string name="confirm_patch">Apply MBCP env?</string>
+    <string name="confirm_restore">Restore original env?</string>
+    <string name="confirm_restart">Restart system server?</string>
+    <string name="confirm_reboot">Reboot?</string>
+
+    <string name="notify_patch_updated">Patch has been updated</string>
+    <string name="notify_patch_added">The new patch is not activated yet</string>
+</resources>

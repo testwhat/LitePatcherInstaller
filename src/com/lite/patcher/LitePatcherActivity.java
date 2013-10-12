@@ -56,6 +56,7 @@ public class LitePatcherActivity extends Activity {
 	Runnable mRefreshStatus = new Runnable() {
 		@Override
 		public void run() {
+			mIsEnvReady = MbcpUtil.isEnvReady(mContext);
 			initStatus();
 			initButton();
 		};
@@ -74,8 +75,8 @@ public class LitePatcherActivity extends Activity {
 		runTask(new Runnable() {
 			@Override
 			public void run() {
-				MbcpUtil.testSu();
 				mIsEnvReady = MbcpUtil.isEnvReady(mContext);
+				MbcpUtil.testSu();
 			}
 		}, new Runnable() {
 			@Override
@@ -115,7 +116,7 @@ public class LitePatcherActivity extends Activity {
 			restoreBtn.setEnabled(true);
 			b.setText(getString(R.string.btn_patched));
 		} else {
-			b.setEnabled(true);
+			b.setEnabled(MbcpUtil.sSuOk);
 			restoreBtn.setEnabled(false);
 			b.setText(getString(R.string.btn_patch));
 		}
@@ -164,7 +165,7 @@ public class LitePatcherActivity extends Activity {
 				mConfirmDialog.show(getString(R.string.confirm_restart), new Runnable() {
 					@Override
 					public void run() {
-						ScriptUtil.execAsset(mContext, "soft_reboot.sh");
+						ScriptUtil.softReboot(mContext);
 					}
 				});
 			}
@@ -177,7 +178,7 @@ public class LitePatcherActivity extends Activity {
 				mConfirmDialog.show(getString(R.string.confirm_reboot), new Runnable() {
 					@Override
 					public void run() {
-						ScriptUtil.execAsset(mContext, "reboot");
+						ScriptUtil.reboot(mContext);
 					}
 				});
 			}
@@ -195,7 +196,7 @@ public class LitePatcherActivity extends Activity {
 		emptyView.setLayoutParams(lparam);
 		emptyView.setText(getString(R.string.empty));
 		emptyView.setVisibility(View.GONE);
-		((ViewGroup) mPatchList.getParent()).addView(emptyView, 1);
+		((ViewGroup) mPatchList.getParent()).addView(emptyView, 2);
 		mPatchList.setEmptyView(emptyView);
 
 		mPatchList.setFastScrollEnabled(true);
@@ -206,7 +207,7 @@ public class LitePatcherActivity extends Activity {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				FPatch p = mPatchesAdapter.getItem(position);
-				mInfoDialog.show(p.packageName, p.apkPath);
+				mInfoDialog.show(p.packageName, "apkPath=" + p.apkPath + "\ntargetJar=" + p.targetJar);
 			}
 		});
 		
@@ -281,10 +282,15 @@ public class LitePatcherActivity extends Activity {
 		iFilter.addAction(Intent.ACTION_PACKAGE_REMOVED);
 		iFilter.addDataScheme("package");
 		registerReceiver(mPackageChangeReceiver = new BroadcastReceiver() {
+			long mLastReFreshTime;
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				if (mIsResumed) {
-					refreshList();	
+					long now = System.currentTimeMillis();
+					if (mLastReFreshTime + 3000 < now) {
+						refreshList();
+					}
+					mLastReFreshTime = now;
 				} else {
 					mIsPendingRefresh = true;
 				}
@@ -471,7 +477,7 @@ public class LitePatcherActivity extends Activity {
 				if (onFinish != null) {
 					onFinish.run();
 				}
-				mLoadingDialog.dismiss();
+				mLoadingDialog.dismissAllowingStateLoss();
 			}
 		
 		}.execute();
@@ -497,7 +503,7 @@ public class LitePatcherActivity extends Activity {
 		@Override
 		public Dialog onCreateDialog(Bundle savedInstanceState) {
 			return mAlertDialog = new AlertDialog.Builder(getActivity())
-		    .setTitle("Confirm").setMessage(mMessage)
+		    .setTitle(getString(R.string.confirm_title)).setMessage(mMessage)
 		    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 		        public void onClick(DialogInterface dialog, int whichButton) {
 		        	mAction.run();
@@ -546,16 +552,12 @@ public class LitePatcherActivity extends Activity {
 		}
 
 		@Override
-		public synchronized void dismiss() {
-			super.dismiss();
-		}
-
-		@Override
 		public synchronized Dialog onCreateDialog(Bundle savedInstanceState) {
 			ProgressDialog pd = new ProgressDialog(getActivity());
 			pd.setCanceledOnTouchOutside(false);
-			pd.setTitle("Loading");
-			pd.setMessage("Loading...........");
+			String loading = getString(R.string.loading);
+			pd.setTitle(loading);
+			pd.setMessage(loading + "...........");
 			return pd;
 		}
 	}

@@ -8,17 +8,17 @@
 	    android:orientation="vertical"
 	    android:background="#ff334455"
 		android:layout_width="match_parent"
-		android:layout_height="190dp">
+		android:layout_height="170sp">
 		<TextView android:text="@string/subtitle_env_list"
 		    android:paddingTop="1dp"
-		    android:paddingLeft="5dp"
+		    android:paddingLeft="5sp"
 		    android:textColor="#ff000022"
-		    android:textSize="16dp"
+		    android:textSize="16sp"
 		    android:background="#ffaaaaaa"
 		    android:layout_width="match_parent"
-			android:layout_height="24dp" />
+			android:layout_height="24sp" />
 		<TextView android:id="@+id/status"
-		    android:minHeight="60dp"
+		    android:minHeight="60sp"
 		    android:background="#ff222222"
 		    android:layout_width="match_parent"
 			android:layout_height="wrap_content"
@@ -45,15 +45,16 @@
 				android:layout_height="wrap_content"
 				android:text="@string/btn_restore" />
 		</LinearLayout>
-		<TextView android:text="@string/subtitle_patch_list"
-		    android:paddingTop="1dp"
-		    android:paddingLeft="5dp"
-		    android:textColor="#ff000022"
-		    android:textSize="16dp"
-		    android:background="#ffaaaaaa"
-		    android:layout_width="match_parent"
-			android:layout_height="24dp" />
     </LinearLayout>
+
+	<TextView android:text="@string/subtitle_patch_list"
+	    android:paddingTop="1sp"
+	    android:paddingLeft="5sp"
+	    android:textColor="#ff000022"
+	    android:textSize="16dp"
+	    android:background="#ffaaaaaa"
+	    android:layout_width="match_parent"
+		android:layout_height="24sp" />
 
 	<ListView android:id="@+id/patch_list"
 	    android:layout_weight="1"

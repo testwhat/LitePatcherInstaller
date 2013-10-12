@@ -10,11 +10,13 @@
     <string name="subtitle_env_list">環境狀態</string>
     <string name="subtitle_patch_list">外掛列表</string>
     <string name="empty">沒有項目</string>
+    <string name="loading">載入中</string>
 
     <string name="mi_usage">說明</string>
     <string name="mi_show_bcp">顯示 boot class path</string>
     <string name="mi_refresh_list">重整列表</string>
 
+    <string name="confirm_title">確認</string>
     <string name="confirm_patch">確定套用環境?</string>
     <string name="confirm_restore">確定還原檔案?</string>
     <string name="confirm_restart">重啟 system server?</string>

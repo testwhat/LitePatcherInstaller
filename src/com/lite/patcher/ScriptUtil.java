@@ -40,12 +40,12 @@ public class ScriptUtil {
 		Log.i(LitePatcherActivity.TAG, "executeScript " + name);
 		File scriptFile = writeAssetToCacheFile(context, name);
 		if (scriptFile == null) {
-			return "Could not find asset \"" + name + "\"";
+			return "Could not find script " + name;
 		}
 		File busybox = writeAssetToCacheFile(context, "busybox");
 		if (busybox == null) {
 			scriptFile.delete();
-			return "Could not find asset \"busybox\"";
+			return "Could not find busybox";
 		}
 		scriptFile.setReadable(true, false);
 		scriptFile.setExecutable(true, false);
@@ -65,7 +65,7 @@ public class ScriptUtil {
 	static int SU_MODE = 0;
 
 	public static synchronized String suCmd(String cmd) {
-		return SU_MODE == 0 ? cmd(su, cmd) : cmd("sh", su + " -c " + cmd);
+		return SU_MODE == 0 ? cmd("sh", su + " -c " + cmd) : cmd(su, cmd);
 	}
 
 	public static String cmd(String exec, String cmd) {
@@ -95,12 +95,15 @@ public class ScriptUtil {
 	}
 
 	public static File writeAssetToCacheFile(Context context, String name) {
-		String dest = name;
-		int fs = dest.indexOf('/');
+		return writeAssetToCacheFile(context, name, removeOneLevelFolder(name));
+	}
+
+	public static String removeOneLevelFolder(String path) {
+		int fs = path.indexOf('/');
 		if (fs > 0) {
-			dest = name.substring(fs);
+			path = path.substring(fs);
 		}
-		return writeAssetToCacheFile(context, name, dest);
+		return path;
 	}
 
 	public static File writeAssetToCacheFile(Context context, String assetName, String fileName) {
@@ -112,15 +115,15 @@ public class ScriptUtil {
 			}
 			InputStream in = context.getAssets().open(assetName);
 			FileOutputStream out = new FileOutputStream(file);
-			
+
 			byte[] buffer = new byte[1024];
 			int len;
-			while ((len = in.read(buffer)) > 0){
+			while ((len = in.read(buffer)) > 0) {
 				out.write(buffer, 0, len);
 			}
 			in.close();
 			out.close();
-			
+
 			return file;
 		} catch (IOException e) {
 			e.printStackTrace();

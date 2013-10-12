@@ -11,6 +11,7 @@ import java.util.HashSet;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.os.Build;
 import android.os.SystemProperties;
 import android.util.Log;
 
@@ -29,15 +30,19 @@ public class MbcpUtil {
 	static final String SCRIPT_BASE = "mbcp/";
 	public static String sEnvStatus;
 	public static boolean sEnvOk;
+	public static boolean sSuOk;
 
 	public static String patch(Context context) {
-		File appProcessFile = ScriptUtil.writeAssetToCacheFile(context, SCRIPT_BASE + MBCP_APP_PROCESS);
+		String suffix = Build.VERSION.SDK_INT < 17 ? "_sdk16" : "";
+		File appProcessFile = ScriptUtil.writeAssetToCacheFile(context,
+				SCRIPT_BASE + MBCP_APP_PROCESS + suffix, MBCP_APP_PROCESS);
 		if (appProcessFile == null) {
-			return "Cannot find asset app_process2";
+			return "Cannot find asset " + MBCP_APP_PROCESS;
 		}
-		File dexopt = ScriptUtil.writeAssetToCacheFile(context, SCRIPT_BASE + MBCP_DEXOPT);
+		File dexopt = ScriptUtil.writeAssetToCacheFile(context,
+				SCRIPT_BASE + MBCP_DEXOPT + suffix, MBCP_DEXOPT);
 		if (dexopt == null) {
-			return "Cannot find asset dexopt2";
+			return "Cannot find asset " + MBCP_DEXOPT;
 		}
 		String result = ScriptUtil.executeScript(context, SCRIPT_BASE + "patch.sh");
 
@@ -53,11 +58,10 @@ public class MbcpUtil {
 
 	public synchronized static void testSu() {
 		if (ScriptUtil.suCmd("ls").length() < 100) {
-			ScriptUtil.SU_MODE = 1;
-			if (ScriptUtil.suCmd("ls").length() < 100) {
-				sEnvStatus += "\nError, Cannot use su command";
-			}
+			sEnvStatus += "\nError, Cannot use su command";
+			return;
 		}
+		sSuOk = true;
 	}
 
 	public synchronized static boolean isEnvReady(Context context) {
@@ -109,6 +113,7 @@ public class MbcpUtil {
 	public static void appendNewPatch(ApplicationInfo app) {
 		try {
 			PrintWriter patchLines = new PrintWriter(new FileWriter(MBCP_PATH_FILE, true));
+			patchLines.print("#");
 			patchLines.print(app.sourceDir);
 			patchLines.print(":");
 			patchLines.println(app.metaData.getString(META_TARGET_JAR_PATH));

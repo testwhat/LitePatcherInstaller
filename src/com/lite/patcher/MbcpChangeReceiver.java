@@ -19,6 +19,7 @@ import android.widget.Toast;
 import com.lite.patcher.MbcpUtil.PatchLineInfo;
 
 public class MbcpChangeReceiver extends BroadcastReceiver {
+	static final String TAG = LitePatcherActivity.TAG;
 	static final int NOTIFY_NEW_PATCH = 81000;
 	
 	@Override
@@ -54,7 +55,7 @@ public class MbcpChangeReceiver extends BroadcastReceiver {
 					int dashPos = patch.indexOf(packageName) + packageName.length();
 					if (patch.charAt(dashPos) == '-') {
 						remove = allPatches.remove(i);
-						Log.i(LitePatcherActivity.TAG, "Remove " + remove.patch);
+						Log.i(TAG, "Remove " + remove.patch);
 						break;
 					}
 				}
@@ -74,7 +75,7 @@ public class MbcpChangeReceiver extends BroadcastReceiver {
 				}
 				appName = pm.getApplicationLabel(app).toString();
 			} catch (NameNotFoundException e) {
-				Log.w(LitePatcherActivity.TAG, "Package not found", e);
+				Log.w(TAG, "Package not found", e);
 				return;
 			}
 
@@ -98,10 +99,12 @@ public class MbcpChangeReceiver extends BroadcastReceiver {
 			}
 			if (!replaced) {
 				// Install new
+				Log.i(TAG, "Install new patch " + app.name);
 				MbcpUtil.appendNewPatch(app);
 			}
 			showNotification(this, packageName, appName, replaced ? getString(R.string.notify_patch_updated)
 					: getString(R.string.notify_patch_added));
+			stopSelf();
 		}
 	}
 

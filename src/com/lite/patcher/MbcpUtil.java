@@ -11,6 +11,7 @@ import java.util.HashSet;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.SystemProperties;
 import android.util.Log;
@@ -110,6 +111,32 @@ public class MbcpUtil {
 		}
 	}
 
+	public static class FPatch {
+		public final String packageName;
+		public final String apkPath;
+		public final String moduleVersion;
+		public final String appName;
+		public final Drawable icon;
+		public final String description;
+		public final String targetJar;
+
+		public FPatch(String packageName, String sourceDir, String moduleVersion, String appName, Drawable icon, String description,
+				String targetJar) {
+			this.packageName = packageName;
+			this.apkPath = sourceDir;
+			this.moduleVersion = moduleVersion;
+			this.appName = appName;
+			this.icon = icon;
+			this.description = description.trim();
+			this.targetJar = targetJar;
+		}
+
+		@Override
+		public String toString() {
+			return String.format("%s [%s]", appName, moduleVersion);
+		}
+	}
+
 	public static void appendNewPatch(ApplicationInfo app) {
 		try {
 			PrintWriter patchLines = new PrintWriter(new FileWriter(MBCP_PATH_FILE, true));
@@ -141,18 +168,30 @@ public class MbcpUtil {
 		}
 	}
 
-	public static void updatePatchListByEnable(HashSet<String> enableSet) {
+	public static void updatePatchListByEnable(HashSet<String> enableSet, FPatch patch, boolean enable) {
 		ArrayList<PatchLineInfo> all = getAllPatchStatus();
 		try {
 			PrintWriter patchLines = new PrintWriter(MBCP_PATH);
+			boolean found = false;
 			for (int i = 0; i < all.size(); i++) {
 				PatchLineInfo p = all.get(i);
+				if (!found && p.patch.equals(patch.apkPath)) {
+					found = true;
+				}
 				if (!enableSet.contains(p.patch)) {
-					patchLines.print('#');					
+					patchLines.print('#');
 				}
 				patchLines.print(p.patch);
 				patchLines.print(':');
 				patchLines.println(p.target);
+			}
+			if (!found) {
+				if (!enable) {
+					patchLines.print('#');
+				}
+				patchLines.print(patch.apkPath);
+				patchLines.print(':');
+				patchLines.println(patch.targetJar);
 			}
 			patchLines.close();
 		} catch (IOException e) {
@@ -202,7 +241,7 @@ public class MbcpUtil {
 		return MBCP_PATH_FILE.exists();
 	}
 
-	public static void forceReLoadPatchListFile(ArrayList<LitePatcherActivity.FPatch> patches) {
+	public static void forceReLoadPatchListFile(ArrayList<FPatch> patches) {
 		if (patches.isEmpty()) {
 			return;
 		}
@@ -215,7 +254,7 @@ public class MbcpUtil {
 		try {
 			PrintWriter patchLines = new PrintWriter(MBCP_PATH);
 			for (int i = 0; i < patches.size(); i++) {
-				LitePatcherActivity.FPatch p = patches.get(i);
+				FPatch p = patches.get(i);
 				patchLines.print('#');
 				patchLines.print(p.apkPath);
 				patchLines.print(':');
@@ -247,6 +286,12 @@ public class MbcpUtil {
 	}
 	
 	public static void setDexDepDisable(boolean disable) {
-		ScriptUtil.suCmd("echo " + (disable ? 1 : 0) + " > " + MBCP_DISABLE_DEX_DEP);
+		try {
+			FileWriter fr = new FileWriter(MBCP_DISABLE_DEX_DEP);
+			fr.write(disable ? "1" : "0");
+			fr.close();
+		} catch (Exception e) {
+			Log.w(LitePatcherActivity.TAG, "Cannot write " + MBCP_DISABLE_DEX_DEP, e);
+		}
 	}
 }

@@ -104,7 +104,6 @@ public class MbcpChangeReceiver extends BroadcastReceiver {
 			}
 			showNotification(this, packageName, appName, replaced ? getString(R.string.notify_patch_updated)
 					: getString(R.string.notify_patch_added));
-			stopSelf();
 		}
 	}
 

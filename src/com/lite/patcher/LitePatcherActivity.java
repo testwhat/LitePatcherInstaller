@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.app.FragmentManager;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -18,7 +19,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.Menu;
@@ -36,6 +36,8 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.lite.patcher.MbcpUtil.FPatch;
 
 public class LitePatcherActivity extends Activity {
 	public static final String TAG = "LPatch";
@@ -126,7 +128,7 @@ public class LitePatcherActivity extends Activity {
 		b.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				mConfirmDialog.show(getString(R.string.confirm_patch), new Runnable() {
+				mConfirmDialog.show(getFragmentManager(), getString(R.string.confirm_patch), new Runnable() {
 					@Override
 					public void run() {
 						runTask(new Runnable() {
@@ -144,7 +146,7 @@ public class LitePatcherActivity extends Activity {
 		restoreBtn.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				mConfirmDialog.show(getString(R.string.confirm_restore), new Runnable() {
+				mConfirmDialog.show(getFragmentManager(), getString(R.string.confirm_restore), new Runnable() {
 					@Override
 					public void run() {
 						runTask(new Runnable() {
@@ -162,7 +164,7 @@ public class LitePatcherActivity extends Activity {
 		b.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				mConfirmDialog.show(getString(R.string.confirm_restart), new Runnable() {
+				mConfirmDialog.show(getFragmentManager(), getString(R.string.confirm_restart), new Runnable() {
 					@Override
 					public void run() {
 						ScriptUtil.softReboot(mContext);
@@ -175,7 +177,7 @@ public class LitePatcherActivity extends Activity {
 		b.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				mConfirmDialog.show(getString(R.string.confirm_reboot), new Runnable() {
+				mConfirmDialog.show(getFragmentManager(), getString(R.string.confirm_reboot), new Runnable() {
 					@Override
 					public void run() {
 						ScriptUtil.reboot(mContext);
@@ -207,7 +209,7 @@ public class LitePatcherActivity extends Activity {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				FPatch p = mPatchesAdapter.getItem(position);
-				mInfoDialog.show(p.packageName, "apkPath=" + p.apkPath + "\ntargetJar=" + p.targetJar);
+				mInfoDialog.show(getFragmentManager(), p.packageName, "apkPath=" + p.apkPath + "\ntargetJar=" + p.targetJar);
 			}
 		});
 		
@@ -359,13 +361,13 @@ public class LitePatcherActivity extends Activity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		if (item.getItemId() == 0) {
-			mInfoDialog.show("Usage", "AndroidManifest example:\n"
+			mInfoDialog.show(getFragmentManager(), "Usage", "AndroidManifest example:\n"
 					+ "<application>\n"
 					+ "  <meta-data android:name=\"mbcpDescription\" android:value=\"My patch\" />\n"
 					+ "  <meta-data android:name=\"mbcpTargetJarPath\" android:value=\"/system/framework/services.jar\" />\n"
 					+ "</application>");
 		} else if (item.getItemId() == 1) {
-			mInfoDialog.show("BOOTCLASSPATH", Libcore.os.getenv("BOOTCLASSPATH"));
+			mInfoDialog.show(getFragmentManager(), "BOOTCLASSPATH", Libcore.os.getenv("BOOTCLASSPATH"));
 		} else if (item.getItemId() == 2) {
 			refreshList();
 		}
@@ -398,17 +400,17 @@ public class LitePatcherActivity extends Activity {
 				vh.checkbox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 					@Override
 					public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-						String apkPath = (String) buttonView.getTag();
+						FPatch patch = (FPatch) buttonView.getTag();
 
-						boolean changed = mEnabledPatches.contains(apkPath) ^ isChecked;
+						boolean changed = mEnabledPatches.contains(patch.apkPath) ^ isChecked;
 						if (changed) {
 							synchronized (mEnabledPatches) {
 								if (isChecked) {
-									mEnabledPatches.add(apkPath);
+									mEnabledPatches.add(patch.apkPath);
 								} else {
-									mEnabledPatches.remove(apkPath);
+									mEnabledPatches.remove(patch.apkPath);
 								}
-								MbcpUtil.updatePatchListByEnable(mEnabledPatches);
+								MbcpUtil.updatePatchListByEnable(mEnabledPatches, patch, isChecked);
 							}
 						}
 					}
@@ -417,7 +419,7 @@ public class LitePatcherActivity extends Activity {
 
 			ListViewItemHolder vh = (ListViewItemHolder) view.getTag();
 			FPatch item = getItem(position);
-			vh.checkbox.setTag(item.apkPath);
+			vh.checkbox.setTag(item);
 			vh.icon.setImageDrawable(item.icon);
 
 			if (item.description.length() > 0) {
@@ -433,37 +435,11 @@ public class LitePatcherActivity extends Activity {
 		}
 	}
 
-	static class FPatch {
-		String packageName;
-		String apkPath;
-		String moduleVersion;
-		String appName;
-		Drawable icon;
-		String description;
-		String targetJar;
-
-		public FPatch(String packageName, String sourceDir, String moduleVersion, String appName, Drawable icon, String description,
-				String targetJar) {
-			this.packageName = packageName;
-			this.apkPath = sourceDir;
-			this.moduleVersion = moduleVersion;
-			this.appName = appName;
-			this.icon = icon;
-			this.description = description.trim();
-			this.targetJar = targetJar;
-		}
-
-		@Override
-		public String toString() {
-			return String.format("%s [%s]", appName, moduleVersion);
-		}
-	}
-
 	void runTask(final Runnable task, final Runnable onFinish) {
 		new AsyncTask<Void, Integer, Void>() {
 			@Override
 			protected void onPreExecute() {
-				mLoadingDialog.show();
+				mLoadingDialog.show(getFragmentManager());
 			}
 			
 			@Override
@@ -483,7 +459,7 @@ public class LitePatcherActivity extends Activity {
 		}.execute();
 	}
 
-	public class ConfirmDailog extends DialogFragment {
+	public static class ConfirmDailog extends DialogFragment {
 		AlertDialog mAlertDialog;
 		Runnable mAction;
 		String mMessage;
@@ -491,13 +467,13 @@ public class LitePatcherActivity extends Activity {
 		public ConfirmDailog() {
 		}
 
-		public void show(String message, Runnable action) {
+		public void show(FragmentManager fm, String message, Runnable action) {
 			if (mAlertDialog != null) {
 				mAlertDialog.setMessage(message);
 			}
 			mMessage = message;
 			mAction = action;
-			show(((Activity) mContext).getFragmentManager(), "ConfirmDailog");
+			show(fm, "ConfirmDailog");
 		}
 
 		@Override
@@ -515,7 +491,7 @@ public class LitePatcherActivity extends Activity {
 		}
 	}
 
-	public class InfoDailog extends DialogFragment {
+	public static class InfoDailog extends DialogFragment {
 		AlertDialog mAlertDialog;
 		Runnable mAction;
 		String mMessage;
@@ -524,14 +500,14 @@ public class LitePatcherActivity extends Activity {
 		public InfoDailog() {
 		}
 
-		public void show(String title, String message) {
+		public void show(FragmentManager fm, String title, String message) {
 			if (mAlertDialog != null) {
 				mAlertDialog.setTitle(title);
 				mAlertDialog.setMessage(message);
 			}
 			mTitle = title;
 			mMessage = message;
-			show(((Activity) mContext).getFragmentManager(), "InfoDailog");
+			show(fm, "InfoDailog");
 		}
 
 		@Override
@@ -540,15 +516,15 @@ public class LitePatcherActivity extends Activity {
 		}
 	}
 
-	public class LoadingDialog extends DialogFragment {
+	public static class LoadingDialog extends DialogFragment {
 		public LoadingDialog() {
 		}
 
-		public synchronized void show() {
+		public synchronized void show(FragmentManager fm) {
 			if (isAdded()) {
 				return;
 			}
-			show(((Activity) mContext).getFragmentManager(), "LoadingDailog");
+			show(fm, "LoadingDialog");
 		}
 
 		@Override

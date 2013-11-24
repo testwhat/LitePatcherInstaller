@@ -52,11 +52,14 @@ public class MbcpChangeReceiver extends BroadcastReceiver {
 				MbcpUtil.PatchLineInfo remove = null;
 				for (int i = allPatches.size() - 1; i >= 0; i--) {
 					String patch = allPatches.get(i).patch;
-					int dashPos = patch.indexOf(packageName) + packageName.length();
-					if (patch.charAt(dashPos) == '-') {
-						remove = allPatches.remove(i);
-						Log.i(TAG, "Remove " + remove.patch);
-						break;
+					int pkgPos = patch.indexOf(packageName);
+					if (pkgPos > -1) {
+						int dashPos = pkgPos + packageName.length();
+						if (patch.charAt(dashPos) == '-') {
+							remove = allPatches.remove(i);
+							Log.i(TAG, "Remove " + remove.patch);
+							break;
+						}
 					}
 				}
 				if (remove != null) {

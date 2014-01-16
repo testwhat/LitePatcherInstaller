@@ -29,6 +29,7 @@ public class MbcpUtil {
 	static final String MBCP_APP_PROCESS = "app_process2";
 	static final String MBCP_DEXOPT = "dexopt2";
 	static final String SCRIPT_BASE = "mbcp/";
+	static final String TAG = LitePatcherActivity.TAG;
 	public static String sEnvStatus;
 	public static boolean sEnvOk;
 	public static boolean sSuOk;
@@ -109,6 +110,11 @@ public class MbcpUtil {
 			patch = line.substring(enable ? 0 : 1, sep);
 			target = line.substring(sep + 1);
 		}
+
+		@Override
+		public String toString() {
+			return (enable ? "" : "#") + patch + ":" + target;
+		}
 	}
 
 	public static class FPatch {
@@ -119,6 +125,7 @@ public class MbcpUtil {
 		public final Drawable icon;
 		public final String description;
 		public final String targetJar;
+		boolean enable;
 
 		public FPatch(String packageName, String sourceDir, String moduleVersion, String appName, Drawable icon, String description,
 				String targetJar) {
@@ -146,7 +153,7 @@ public class MbcpUtil {
 			patchLines.println(app.metaData.getString(META_TARGET_JAR_PATH));
 			patchLines.close();
 		} catch (IOException e) {
-			Log.w(LitePatcherActivity.TAG, "Cannot write " + MBCP_PATH, e);
+			Log.w(TAG, "Cannot write " + MBCP_PATH, e);
 		}
 	}
 
@@ -156,7 +163,7 @@ public class MbcpUtil {
 			for (int i = 0; i < patches.size(); i++) {
 				PatchLineInfo p = patches.get(i);
 				if (!p.enable) {
-					patchLines.print('#');					
+					patchLines.print('#');
 				}
 				patchLines.print(p.patch);
 				patchLines.print(':');
@@ -164,11 +171,11 @@ public class MbcpUtil {
 			}
 			patchLines.close();
 		} catch (IOException e) {
-			Log.w(LitePatcherActivity.TAG, "Cannot write " + MBCP_PATH, e);
+			Log.w(TAG, "Cannot write " + MBCP_PATH, e);
 		}
 	}
 
-	public static void updatePatchListByEnable(HashSet<String> enableSet, FPatch patch, boolean enable) {
+	public static void updatePatchListByEnable(java.util.Set<String> enableSet, FPatch patch, boolean enable) {
 		ArrayList<PatchLineInfo> all = getAllPatchStatus();
 		try {
 			PrintWriter patchLines = new PrintWriter(MBCP_PATH);
@@ -195,8 +202,16 @@ public class MbcpUtil {
 			}
 			patchLines.close();
 		} catch (IOException e) {
-			Log.w(LitePatcherActivity.TAG, "Cannot write " + MBCP_PATH, e);
+			Log.w(TAG, "Cannot write " + MBCP_PATH, e);
 		}
+	}
+
+	public static String getMbcpFileContent() {
+		StringBuilder sb = new StringBuilder(256);
+		for (PatchLineInfo line : getAllPatchStatus()) {
+			sb.append(line.toString()).append("\n");
+		}
+		return sb.toString();
 	}
 
 	public static ArrayList<PatchLineInfo> getAllPatchStatus() {
@@ -209,7 +224,7 @@ public class MbcpUtil {
 			}
 			patchLines.close();
 		} catch (IOException e) {
-			Log.w(LitePatcherActivity.TAG, "Cannot read " + MBCP_PATH, e);
+			Log.w(TAG, "Cannot read " + MBCP_PATH, e);
 		}
 		return infos;
 	}
@@ -217,7 +232,7 @@ public class MbcpUtil {
 	public static HashSet<String> getActivePatchPaths() {
 		HashSet<String> patches = new HashSet<String>();
 		if (!isPatchListFileExist()) {
-			Log.i(LitePatcherActivity.TAG, "Not found " + MBCP_PATH);
+			Log.i(TAG, "Not found " + MBCP_PATH);
 			return patches;
 		}
 		try {
@@ -232,13 +247,19 @@ public class MbcpUtil {
 			}
 			patchLines.close();
 		} catch (IOException e) {
-			Log.w(LitePatcherActivity.TAG, "Cannot read " + MBCP_PATH, e);
+			Log.w(TAG, "Cannot read " + MBCP_PATH, e);
 		}
 		return patches;
 	}
 
 	public static boolean isPatchListFileExist() {
 		return MBCP_PATH_FILE.exists();
+	}
+
+	public static void deleteMbcpFile() {
+		if (isPatchListFileExist()) {
+			MBCP_PATH_FILE.delete();
+		}
 	}
 
 	public static void forceReLoadPatchListFile(ArrayList<FPatch> patches) {
@@ -248,21 +269,23 @@ public class MbcpUtil {
 		if (isPatchListFileExist()) {
 			return;
 		} else {
-			Log.i(LitePatcherActivity.TAG, "Creating " + MBCP_PATH);
+			Log.i(TAG, "Creating " + MBCP_PATH);
 		}
 
 		try {
 			PrintWriter patchLines = new PrintWriter(MBCP_PATH);
 			for (int i = 0; i < patches.size(); i++) {
 				FPatch p = patches.get(i);
-				patchLines.print('#');
+				if (!p.enable) {
+					patchLines.print('#');
+				}
 				patchLines.print(p.apkPath);
 				patchLines.print(':');
 				patchLines.println(p.targetJar);
 			}
 			patchLines.close();
 		} catch (IOException e) {
-			Log.w(LitePatcherActivity.TAG, "Cannot write " + MBCP_PATH, e);
+			Log.w(TAG, "Cannot write " + MBCP_PATH, e);
 		}
 	}
 
@@ -280,7 +303,7 @@ public class MbcpUtil {
 			disable = str.length() > 0 && str.charAt(0) != '0';
 			fr.close();
 		} catch (Exception e) {
-			Log.w(LitePatcherActivity.TAG, "Cannot read " + MBCP_DISABLE_DEX_DEP, e);
+			Log.w(TAG, "Cannot read " + MBCP_DISABLE_DEX_DEP, e);
 		}
 		return disable;
 	}
@@ -291,7 +314,7 @@ public class MbcpUtil {
 			fr.write(disable ? "1" : "0");
 			fr.close();
 		} catch (Exception e) {
-			Log.w(LitePatcherActivity.TAG, "Cannot write " + MBCP_DISABLE_DEX_DEP, e);
+			Log.w(TAG, "Cannot write " + MBCP_DISABLE_DEX_DEP, e);
 		}
 	}
 }

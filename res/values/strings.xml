@@ -14,6 +14,7 @@
 
     <string name="mi_usage">How to use</string>
     <string name="mi_show_bcp">Show boot class path</string>
+    <string name="mi_show_mbcp_config">Show override file</string>
     <string name="mi_refresh_list">Force refresh list</string>
 
     <string name="confirm_title">Confirm</string>

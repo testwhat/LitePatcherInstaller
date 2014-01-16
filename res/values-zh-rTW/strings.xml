@@ -14,6 +14,7 @@
 
     <string name="mi_usage">說明</string>
     <string name="mi_show_bcp">顯示 boot class path</string>
+    <string name="mi_show_mbcp_config">顯示 覆蓋設定檔</string>
     <string name="mi_refresh_list">重整列表</string>
 
     <string name="confirm_title">確認</string>

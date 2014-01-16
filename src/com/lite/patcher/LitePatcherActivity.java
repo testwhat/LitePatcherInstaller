@@ -1,7 +1,6 @@
 package com.lite.patcher;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 import libcore.io.Libcore;
 import android.app.Activity;
@@ -47,13 +46,14 @@ public class LitePatcherActivity extends Activity {
 	InfoDailog mInfoDialog;
 	LoadingDialog mLoadingDialog;
 	ListView mPatchList;
-	HashSet<String> mEnabledPatches;
+	java.util.Set<String> mEnabledPatches;
 	PatchesAdapter mPatchesAdapter;
 	BroadcastReceiver mPackageChangeReceiver;
 	boolean mIsInited;
 	boolean mIsEnvReady;
 	boolean mIsResumed;
 	boolean mIsPendingRefresh;
+	boolean mForceReload;
 
 	Runnable mRefreshStatus = new Runnable() {
 		@Override
@@ -77,6 +77,7 @@ public class LitePatcherActivity extends Activity {
 		runTask(new Runnable() {
 			@Override
 			public void run() {
+				ScriptUtil.initSuMode();
 				mIsEnvReady = MbcpUtil.isEnvReady(mContext);
 				MbcpUtil.testSu();
 			}
@@ -237,12 +238,10 @@ public class LitePatcherActivity extends Activity {
 	private void refreshList() {
 		mPatchesAdapter.clear();
 		final ArrayList<FPatch> patches = new ArrayList<FPatch>();
-
 		runTask(new Runnable() {
-			
 			@Override
 			public void run() {
-				mEnabledPatches = MbcpUtil.getActivePatchPaths();
+				mEnabledPatches = java.util.Collections.synchronizedSet(MbcpUtil.getActivePatchPaths());
 				PackageManager pm = mContext.getPackageManager();
 				for (PackageInfo pkg : pm.getInstalledPackages(PackageManager.GET_META_DATA)) {
 					ApplicationInfo app = pkg.applicationInfo;
@@ -258,10 +257,17 @@ public class LitePatcherActivity extends Activity {
 							}
 						} catch (Exception e) {}
 					}
-
-					patches.add(new FPatch(pkg.packageName, pkg.applicationInfo.sourceDir,
+					FPatch p = new FPatch(pkg.packageName, pkg.applicationInfo.sourceDir,
 							pkg.versionName, pm.getApplicationLabel(app).toString(),
-							pm.getApplicationIcon(app), description, app.metaData.getString(MbcpUtil.META_TARGET_JAR_PATH)));
+							pm.getApplicationIcon(app), description, app.metaData.getString(MbcpUtil.META_TARGET_JAR_PATH));
+					if (mEnabledPatches.contains(pkg.applicationInfo.sourceDir)) {
+						p.enable = true;
+					}
+					patches.add(p);
+				}
+				if (mForceReload) {
+					MbcpUtil.deleteMbcpFile();
+					mForceReload = false;
 				}
 				if (!patches.isEmpty()) {
 					MbcpUtil.forceReLoadPatchListFile(patches);
@@ -353,8 +359,9 @@ public class LitePatcherActivity extends Activity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		menu.add(0, 0, 0, getString(R.string.mi_usage));
 		menu.add(0, 1, 0, getString(R.string.mi_show_bcp));
-		menu.add(0, 2, 0, getString(R.string.mi_refresh_list));
-		menu.add(0, 3, 0, "Version 0.1");
+		menu.add(0, 2, 0, getString(R.string.mi_show_mbcp_config));
+		menu.add(0, 3, 0, getString(R.string.mi_refresh_list));
+		menu.add(0, 4, 0, "Version 0.1");
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -369,6 +376,9 @@ public class LitePatcherActivity extends Activity {
 		} else if (item.getItemId() == 1) {
 			mInfoDialog.show(getFragmentManager(), "BOOTCLASSPATH", Libcore.os.getenv("BOOTCLASSPATH"));
 		} else if (item.getItemId() == 2) {
+			mInfoDialog.show(getFragmentManager(), "MBCP Config", MbcpUtil.getMbcpFileContent());
+		} else if (item.getItemId() == 3) {
+			mForceReload = true;
 			refreshList();
 		}
 		return super.onOptionsItemSelected(item);
@@ -401,17 +411,14 @@ public class LitePatcherActivity extends Activity {
 					@Override
 					public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 						FPatch patch = (FPatch) buttonView.getTag();
-
 						boolean changed = mEnabledPatches.contains(patch.apkPath) ^ isChecked;
 						if (changed) {
-							synchronized (mEnabledPatches) {
-								if (isChecked) {
-									mEnabledPatches.add(patch.apkPath);
-								} else {
-									mEnabledPatches.remove(patch.apkPath);
-								}
-								MbcpUtil.updatePatchListByEnable(mEnabledPatches, patch, isChecked);
+							if (isChecked) {
+								mEnabledPatches.add(patch.apkPath);
+							} else {
+								mEnabledPatches.remove(patch.apkPath);
 							}
+							MbcpUtil.updatePatchListByEnable(mEnabledPatches, patch, isChecked);
 						}
 					}
 				});

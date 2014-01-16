@@ -15,6 +15,7 @@ import android.content.Context;
 import android.util.Log;
 
 public class ScriptUtil {
+	static final String TAG = LitePatcherActivity.TAG;
 	public static String execAsset(Context context, String fileName) {
 		File file = new File(context.getCacheDir(), fileName);
 		if (!file.exists()) {
@@ -37,7 +38,7 @@ public class ScriptUtil {
 	}
 
 	public static String executeScript(Context context, String name) {
-		Log.i(LitePatcherActivity.TAG, "executeScript " + name);
+		Log.i(TAG, "executeScript " + name);
 		File scriptFile = writeAssetToCacheFile(context, name);
 		if (scriptFile == null) {
 			return "Could not find script " + name;
@@ -63,6 +64,25 @@ public class ScriptUtil {
 
 	static String su = new File("/system/xbin/su").exists() ? "/system/xbin/su" : "su";
 	static int SU_MODE = 0;
+
+	public static void initSuMode() {
+		String result = null;
+		try {
+			Process p = Runtime.getRuntime().exec(new String[] { su, "-v" });
+			BufferedReader stdout = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			result = stdout.readLine();
+			Log.i(TAG, "su version=" + result);
+			stdout.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		if (result != null && result.length() > 0) {
+			SU_MODE = 1;
+			Log.i(TAG, "su mode");
+		} else {
+			Log.i(TAG, "sh su mode");
+		}
+	}
 
 	public static synchronized String suCmd(String cmd) {
 		return SU_MODE == 0 ? cmd("sh", su + " -c " + cmd) : cmd(su, cmd);

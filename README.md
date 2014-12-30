@@ -9,6 +9,7 @@ e.g.
 Create an application
 with AndroidManifest.xml:
 
+```html
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="an.override.kk443"
@@ -21,6 +22,7 @@ with AndroidManifest.xml:
 	</application>
 
 </manifest>
+```
 
 And source contain somthing like
 src/android/app/Activity.java
